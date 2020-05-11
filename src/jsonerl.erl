@@ -4,29 +4,29 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
-encode(Anything) ->
+encode_tojson(Anything) ->
     try
-	jsone:encode(encode_1(Anything))
+	jsone:encode(encode(Anything))
     catch
 	error:badarg ->
 	    throw({invalid_json, Anything})
     end.
 
-encode_1(E) when is_atom(E) ->
+encode(E) when is_atom(E) ->
     #{<<"t">> => <<"atom">>, <<"v">> => list_to_binary(atom_to_list(E))};
-encode_1(E) when is_tuple(E) ->
-    #{<<"t">> => <<"tuple">>, <<"v">> => encode_1(tuple_to_list(E))};
-encode_1(E) when is_map(E) ->
-    #{<<"t">> => <<"map">>, <<"v">> => encode_1(maps:to_list(E))};
-encode_1(E) when is_binary(E) ->
+encode(E) when is_tuple(E) ->
+    #{<<"t">> => <<"tuple">>, <<"v">> => encode(tuple_to_list(E))};
+encode(E) when is_map(E) ->
+    #{<<"t">> => <<"map">>, <<"v">> => encode(maps:to_list(E))};
+encode(E) when is_binary(E) ->
     ensure_utf8(E);
-encode_1(E) when is_number(E) ->
+encode(E) when is_number(E) ->
     E;
-encode_1([E | Rest]) ->
-    [encode_1(E) | encode_1(Rest)];
-encode_1([]) ->
+encode([E | Rest]) ->
+    [encode(E) | encode(Rest)];
+encode([]) ->
     [];
-encode_1(V) ->
+encode(V) ->
     throw({invalid_json, V}).
 
 %% erlang binary could be NOT utf8
@@ -41,32 +41,51 @@ ensure_utf8(Binary) when is_binary(Binary) ->
     end.
 
 
-decode(Anything) ->
+decode_fromjson(Anything) ->
     try
-	decode_1(jsone:decode(Anything))
+	decode(jsone:decode(Anything))
     catch
 	error:badarg ->
 	    throw({invalid_json, Anything})
     end.
 
-decode_1(#{<<"t">> := <<"atom">>, <<"v">> := V}) ->
+decode(#{<<"t">> := <<"atom">>, <<"v">> := V}) ->
     binary_to_existing_atom(V, utf8);
-decode_1(#{<<"t">> := <<"tuple">>, <<"v">> := V}) ->
-    list_to_tuple(decode_1(V));
-decode_1(#{<<"t">> := <<"map">>, <<"v">> := V}) ->
-    maps:from_list(decode_1(V));
-decode_1(E) when is_binary(E); is_number(E) ->
+decode(#{<<"t">> := <<"tuple">>, <<"v">> := V}) ->
+    list_to_tuple(decode(V));
+decode(#{<<"t">> := <<"map">>, <<"v">> := V}) ->
+    maps:from_list(decode(V));
+decode(E) when is_binary(E); is_number(E) ->
     E;
-decode_1([E | Rest]) ->
-    [decode_1(E) | decode_1(Rest)];
-decode_1([]) ->
+decode([E | Rest]) ->
+    [decode(E) | decode(Rest)];
+decode([]) ->
     [];
-decode_1(V) ->
+decode(V) ->
     throw({invalid_json, V}).
 
 -ifdef(TEST).
 
-encode_decode_maps() ->
+encode_decode_maps_1() ->
+    [{1, 1}, {a, #{<<"t">> => <<"atom">>, <<"v">> => <<"a">>}},
+     {{1,2}, #{<<"t">> => <<"tuple">>, <<"v">> => [1, 2]}},
+     {#{<<"a">> => 1},
+      #{<<"t">> => <<"map">>,
+	<<"v">> => [#{<<"t">> => <<"tuple">>, <<"v">> => [<<"a">>, 1]}]}}
+    ].
+
+encode_test_() ->
+    lists:map(fun({V, T}) ->
+		      %?debugFmt("~p~n", [encode(V)]),
+		      ?_assert(encode(V) =:= T)
+	      end, encode_decode_maps_1()).
+
+decode_test_() ->
+    lists:map(fun({V, T}) ->
+		      ?_assert(decode(T) =:= V)
+	      end, encode_decode_maps_1()).
+
+encode_decode_maps_2() ->
     [{1, <<"1">>},
      {a, <<"{\"t\":\"atom\",\"v\":\"a\"}">>},
      {<<"ab">>, <<"\"ab\"">>},
@@ -79,19 +98,19 @@ encode_decode_maps() ->
      {#{a => #{b => 2}}, <<"{\"t\":\"map\",\"v\":[{\"t\":\"tuple\",\"v\":[{\"t\":\"atom\",\"v\":\"a\"},{\"t\":\"map\",\"v\":[{\"t\":\"tuple\",\"v\":[{\"t\":\"atom\",\"v\":\"b\"},2]}]}]}]}">>}
     ].
 
-encode_test_() ->
+encode_tojson_test_() ->
     lists:map(fun({V, T}) ->
-		      %?debugFmt("~p~n", [encode(V)]),
-		      ?_assert(encode(V) =:= T)
-	      end, encode_decode_maps()).
+		      %?debugFmt("~p~n", [encode_tojson(V)]),
+		      ?_assert(encode_tojson(V) =:= T)
+	      end, encode_decode_maps_2()).
 
-encode_invliad_utf8_test() ->
-    ?assert(encode(<<192>>) =:= <<"\"non-utf8\"">>).
+encode_tojson_invliad_utf8_test() ->
+    ?assert(encode_tojson(<<192>>) =:= <<"\"non-utf8\"">>).
 
-decode_test_() ->
+decode_fromjson_test_() ->
     lists:map(fun({V, T}) ->
-		      ?_assert(decode(T) =:= V)
-	      end, encode_decode_maps()).
+		      ?_assert(decode_fromjson(T) =:= V)
+	      end, encode_decode_maps_2()).
 
 -endif.
 
