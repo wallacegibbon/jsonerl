@@ -1,6 +1,6 @@
 -module(jsonerl).
 
--export([encode/1, decode/1]).
+-export([encode/1, decode/1, encode_tojson/1, decode_fromjson/1]).
 
 -include_lib("eunit/include/eunit.hrl").
 
