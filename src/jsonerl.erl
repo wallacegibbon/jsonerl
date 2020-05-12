@@ -2,8 +2,6 @@
 
 -export([encode/1, decode/1, encode_tojson/1, decode_fromjson/1]).
 
--include_lib("eunit/include/eunit.hrl").
-
 encode_tojson(Anything) ->
     try
 	jsone:encode(encode(Anything))
@@ -65,6 +63,8 @@ decode(V) ->
     throw({invalid_json, V}).
 
 -ifdef(TEST).
+
+-include_lib("eunit/include/eunit.hrl").
 
 encode_decode_maps_1() ->
     [{1, 1}, {a, #{<<"t">> => <<"atom">>, <<"v">> => <<"a">>}},
