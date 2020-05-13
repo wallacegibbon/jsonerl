@@ -43,8 +43,8 @@ decode_fromjson(Anything) ->
     try
 	decode(jsone:decode(Anything))
     catch
-	throw:{atom_not_exist, Atom} ->
-	    throw({invalid_atom, Atom});
+	throw:{atom_not_exist, _} = E ->
+	    throw({invalid_json, E});
 	error:badarg ->
 	    throw({invalid_json, Anything})
     end.
