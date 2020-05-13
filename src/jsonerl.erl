@@ -43,14 +43,16 @@ decode_fromjson(Anything) ->
     try
 	decode(jsone:decode(Anything))
     catch
+	throw:{atom_not_exist, Atom} ->
+	    throw({invalid_atom, Atom});
 	error:badarg ->
 	    throw({invalid_json, Anything})
     end.
 
-decode(#{<<"t">> := <<"atom">>, <<"v">> := V}) ->
-    binary_to_existing_atom(V, utf8);
 decode(#{<<"t">> := <<"tuple">>, <<"v">> := V}) ->
     list_to_tuple(decode(V));
+decode(#{<<"t">> := <<"atom">>, <<"v">> := V}) ->
+    try_decode_atom(V);
 decode(#{<<"t">> := <<"map">>, <<"v">> := V}) ->
     maps:from_list(decode(V));
 decode(E) when is_binary(E); is_number(E) ->
@@ -61,6 +63,14 @@ decode([]) ->
     [];
 decode(V) ->
     throw({invalid_json, V}).
+
+try_decode_atom(Atom) when is_binary(Atom) ->
+    try
+	binary_to_existing_atom(Atom, utf8)
+    catch
+	error:badarg ->
+	    throw({atom_not_exist, Atom})
+    end.
 
 -ifdef(TEST).
 
@@ -88,6 +98,7 @@ decode_test_() ->
 encode_decode_maps_2() ->
     [{1, <<"1">>},
      {a, <<"{\"t\":\"atom\",\"v\":\"a\"}">>},
+     {blah, <<"{\"t\":\"atom\",\"v\":\"blah\"}">>},
      {<<"ab">>, <<"\"ab\"">>},
      {{1,2}, <<"{\"t\":\"tuple\",\"v\":[1,2]}">>},
      {[1,2], <<"[1,2]">>},
