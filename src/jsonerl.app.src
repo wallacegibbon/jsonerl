@@ -1,5 +1,5 @@
 {application, jsonerl,
  [{description, "An OTP library"},
-  {vsn, "0.2.7"},
+  {vsn, "0.2.8"},
   {applications, [kernel, stdlib, jsone]}
  ]}.
