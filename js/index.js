@@ -2,7 +2,7 @@ function tuple(ElementList) {
     if (Array.isArray(ElementList)) {
 	return {t: "tuple", v: ElementList};
     } else {
-	throw new Error(`tuple only accept list (${ElementList})`);
+	throw new Error(`tuple only accept array, but got: ${ElementList}`);
     }
 }
 
@@ -10,7 +10,7 @@ function atom(V) {
     if (typeof V === "string") {
 	return {t: "atom", v: V};
     } else {
-	throw new Error(`atom only accept list (${V})`);
+	throw new Error(`atom only accept string, but got: ${V}`);
     }
 }
 
