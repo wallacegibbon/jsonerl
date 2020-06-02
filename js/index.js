@@ -1,3 +1,7 @@
+function map(Obj) {
+    return {t: "map", v: Object.entries(Obj).map(([k, v]) => tuple([k, v]))};
+}
+
 function tuple(ElementList) {
     if (Array.isArray(ElementList)) {
 	return {t: "tuple", v: ElementList};
@@ -43,6 +47,7 @@ function decode(Obj) {
 }
 
 module.exports = {
+    map,
     tuple,
     atom,
     decode,
