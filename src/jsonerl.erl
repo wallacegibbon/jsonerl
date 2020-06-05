@@ -2,6 +2,10 @@
 
 -export([encode/1, decode/1, encode_tojson/1, decode_fromjson/1]).
 
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+-endif.
+
 encode_tojson(Anything) ->
     try
 	jsone:encode(encode(Anything))
@@ -73,8 +77,6 @@ try_decode_atom(Atom) when is_binary(Atom) ->
     end.
 
 -ifdef(TEST).
-
--include_lib("eunit/include/eunit.hrl").
 
 encode_decode_maps_1() ->
     [{1, 1}, {a, #{<<"t">> => <<"atom">>, <<"v">> => <<"a">>}},
